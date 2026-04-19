@@ -1,0 +1,59 @@
+@startuml travel_agents_architecture
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam component {
+    BackgroundColor #D3D3D3
+    BorderColor #333333
+}
+
+title Travel Planning Agent System - Architecture Diagram
+
+package "User Interface Layer" {
+    component [CLI/API/Web\nInterface]
+}
+
+package "Orchestration Layer" {
+    component TravelOrchestrator as "Travel Planning\nOrchestrator"
+}
+
+package "Agent Layer" {
+    component DestinationAgent as "Destination\nRecommender Agent"
+    component ItineraryAgent as "Itinerary\nPlanner Agent"
+    component BudgetAgent as "Budget\nOptimizer Agent"
+}
+
+package "Data Layer" {
+    database TravelModels as "Travel Data\nModels"
+    database DestinationDB as "Destination\nDatabase"
+}
+
+package "Integration Layer" {
+    component GoogleAPI as "Google Maps\nAPI Service"
+}
+
+package "External Services" {
+    cloud "Google Maps\nAPI" as GoogleCloud
+    cloud "Google Places\nAPI" as PlacesCloud
+}
+
+[CLI/API/Web\nInterface] --> TravelOrchestrator
+
+TravelOrchestrator --> DestinationAgent
+TravelOrchestrator --> ItineraryAgent
+TravelOrchestrator --> BudgetAgent
+
+DestinationAgent --> TravelModels
+DestinationAgent --> DestinationDB
+DestinationAgent --> GoogleAPI
+
+ItineraryAgent --> TravelModels
+ItineraryAgent --> DestinationDB
+ItineraryAgent --> GoogleAPI
+
+BudgetAgent --> TravelModels
+BudgetAgent --> GoogleAPI
+
+GoogleAPI --> GoogleCloud
+GoogleAPI --> PlacesCloud
+
+@enduml

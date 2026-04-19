@@ -1,0 +1,166 @@
+@startuml travel_planning_classes
+!theme plain
+skinparam backgroundColor #FEFEFE
+
+title Travel Planning Agent System - Class Diagram
+
+package "Agents" {
+    abstract class BaseAgent {
+        #name: str
+        #logger: Logger
+        {abstract} process(input_data): Any
+        {abstract} validate_input(input_data): bool
+        run(input_data): Any
+    }
+
+    class DestinationRecommenderAgent {
+        -destinations: List[Destination]
+        +get_recommendations(pref, top_n): List[DestinationRecommendation]
+        -calculate_match_score(dest, pref): float
+        -generate_reasons(dest, pref, score): List[str]
+        -find_similar_destinations(name): List[str]
+    }
+
+    class ItineraryPlannerAgent {
+        +create_itinerary_day(dest, date, day, total, interests, budget): ItineraryDay
+        +create_daily_activities(dest, day, total, interests): List[Activity]
+    }
+
+    class BudgetOptimizerAgent {
+        +analyze_budget(itinerary, budget): BudgetBreakdown
+        -generate_recommendations(budget, alloc, remain, itinerary): List[str]
+        -optimize_costs(itinerary, overage): List[str]
+    }
+}
+
+package "Models" {
+    class TravelPreferences {
+        +destinations: List[str]
+        +start_date: date
+        +end_date: date
+        +budget: float
+        +travel_style: str
+        +interests: List[str]
+        +number_of_travelers: int
+    }
+
+    class Destination {
+        +name: str
+        +country: str
+        +latitude: float
+        +longitude: float
+        +description: str
+        +estimated_cost_per_day: float
+        +best_season: str
+        +attractions: List[str]
+        +average_temperature: float
+    }
+
+    class ItineraryDay {
+        +date: date
+        +location: str
+        +activities: List[Activity]
+        +accommodation: str
+        +estimated_cost: float
+        +notes: str
+    }
+
+    class TravelItinerary {
+        +destinations: List[str]
+        +days: List[ItineraryDay]
+        +total_duration: int
+        +total_estimated_cost: float
+        +transportation_cost: float
+        +accommodation_cost: float
+        +activities_cost: float
+        +dining_cost: float
+    }
+
+    class Activity {
+        +name: str
+        +location: str
+        +duration_hours: float
+        +estimated_cost: float
+        +description: str
+        +rating: float
+        +booking_url: str
+    }
+
+    class BudgetBreakdown {
+        +total_budget: float
+        +transportation: float
+        +accommodation: float
+        +activities: float
+        +dining: float
+        +emergency_buffer: float
+        +remaining_buffer: float
+        +recommendations: List[str]
+    }
+
+    class DestinationRecommendation {
+        +destination: Destination
+        +match_score: float
+        +reasons: List[str]
+        +estimated_daily_cost: float
+        +best_days_to_visit: int
+        +similar_destinations: List[str]
+    }
+}
+
+package "Services" {
+    class GoogleAPIService {
+        -api_key: str
+        -client: googlemaps.Client
+        +search_places(query, location, radius): List[Dict]
+        +get_distance_matrix(origins, dests, mode): Dict
+        +get_place_details(place_id): Dict
+        +geocode_location(location): Dict
+        +reverse_geocode(lat, lng): str
+        +get_attractions(location, radius): List[Dict]
+        +get_restaurants(location, radius): List[Dict]
+        +get_hotels(location, radius): List[Dict]
+    }
+}
+
+package "Orchestration" {
+    class TravelPlanningOrchestrator {
+        -google_api_service: GoogleAPIService
+        -destination_recommender: DestinationRecommenderAgent
+        -itinerary_planner: ItineraryPlannerAgent
+        -budget_optimizer: BudgetOptimizerAgent
+        +plan_trip(destinations, dates, budget, style, interests, travelers): Dict
+        -serialize_preferences(pref): Dict
+        -serialize_recommendations(recs): List[Dict]
+        -serialize_itinerary(itinerary): Dict
+        -serialize_budget_breakdown(breakdown): Dict
+        +save_plan_to_file(plan, filename): void
+        +print_trip_plan(plan): void
+    }
+}
+
+BaseAgent <|-- DestinationRecommenderAgent
+BaseAgent <|-- ItineraryPlannerAgent
+BaseAgent <|-- BudgetOptimizerAgent
+
+DestinationRecommenderAgent --> Destination
+DestinationRecommenderAgent --> DestinationRecommendation
+DestinationRecommenderAgent --> TravelPreferences
+
+ItineraryPlannerAgent --> ItineraryDay
+ItineraryPlannerAgent --> TravelItinerary
+ItineraryPlannerAgent --> Activity
+ItineraryPlannerAgent --> TravelPreferences
+
+BudgetOptimizerAgent --> BudgetBreakdown
+BudgetOptimizerAgent --> TravelItinerary
+
+TravelPlanningOrchestrator --> GoogleAPIService
+TravelPlanningOrchestrator --> DestinationRecommenderAgent
+TravelPlanningOrchestrator --> ItineraryPlannerAgent
+TravelPlanningOrchestrator --> BudgetOptimizerAgent
+TravelPlanningOrchestrator --> TravelPreferences
+
+TravelItinerary --> ItineraryDay
+DestinationRecommendation --> Destination
+
+@enduml

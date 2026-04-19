@@ -1,0 +1,59 @@
+@startuml travel_planning_sequence
+!theme plain
+skinparam backgroundColor #FEFEFE
+
+title Travel Planning Agent System - Sequence Diagram
+
+actor User
+participant Orchestrator as "Travel\nOrchestrator"
+participant DestAgent as "Destination\nRecommender"
+participant ItineraryAgent as "Itinerary\nPlanner"
+participant BudgetAgent as "Budget\nOptimizer"
+participant GoogleAPI as "Google API\nService"
+database DB as "Destination\nDatabase"
+
+User -> Orchestrator: plan_trip(\ndestinations, dates,\nbudget, interests, style)
+
+Orchestrator -> DestAgent: run(preferences)
+activate DestAgent
+
+DestAgent -> DB: query_destinations()
+DB --> DestAgent: destinations_list
+
+DestAgent -> DestAgent: calculate_match_scores()
+DestAgent -> DestAgent: rank_recommendations()
+
+DestAgent --> Orchestrator: recommendations_list
+
+deactivate DestAgent
+
+Orchestrator -> Orchestrator: select_top_destinations()
+
+Orchestrator -> ItineraryAgent: run(preferences,\nselected_destinations)
+activate ItineraryAgent
+
+ItineraryAgent -> GoogleAPI: search_attractions()
+GoogleAPI --> ItineraryAgent: attractions_data
+
+ItineraryAgent -> ItineraryAgent: create_daily_plans()
+ItineraryAgent -> ItineraryAgent: allocate_activities()
+
+ItineraryAgent --> Orchestrator: itinerary_object
+
+deactivate ItineraryAgent
+
+Orchestrator -> BudgetAgent: run(itinerary,\ntotal_budget)
+activate BudgetAgent
+
+BudgetAgent -> BudgetAgent: analyze_budget()
+BudgetAgent -> BudgetAgent: calculate_breakdown()
+BudgetAgent -> BudgetAgent: generate_recommendations()
+
+BudgetAgent --> Orchestrator: budget_breakdown
+
+deactivate BudgetAgent
+
+Orchestrator -> Orchestrator: compile_trip_plan()
+Orchestrator -> User: trip_plan_json
+
+@enduml
