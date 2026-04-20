@@ -329,7 +329,7 @@
                     <div class="stat-label">Destinations</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${{ "%,.2f"|format(avg_daily_budget) }}</div>
+                    <div class="stat-value">${{ "%.2f"|format(avg_daily_budget) }}</div>
                     <div class="stat-label">Daily Budget</div>
                 </div>
                 <div class="stat-card">
@@ -353,7 +353,7 @@
                     <div class="destination-name">{{ dest.name }}</div>
                     <div class="destination-match">
                         <i class="bi bi-star-fill" style="color: #f59e0b;"></i>
-                        {{ "%.1f"|format(dest.match_score * 100) }}% Match
+                        {{ "%.1f"|format(dest.match_score * 100 if dest.match_score else 0) }}% Match
                     </div>
                 </div>
             </div>
@@ -362,21 +362,21 @@
         {% endif %}
 
         <!-- Itinerary -->
-        {% if trip.itinerary %}
+        {% if trip.itinerary and trip.itinerary.daily_plans %}
         <div class="section">
             <h2 class="section-title">
                 <i class="bi bi-calendar-event"></i> Daily Itinerary
             </h2>
 
-            {% for day, activities in trip.itinerary.items() %}
+            {% for day_plan in trip.itinerary.daily_plans %}
             <div class="day-card">
                 <div class="day-header">
-                    📅 {{ day }}
+                    📅 {{ day_plan.date }} - {{ day_plan.location }}
                 </div>
-                {% for activity in activities %}
+                {% for activity in day_plan.activities %}
                 <div class="activity-item">
                     <div class="activity-time">
-                        <i class="bi bi-clock"></i> {{ activity.duration or "Full day" }}
+                        <i class="bi bi-clock"></i> {{ activity.duration_hours }} hours
                     </div>
                     <div class="activity-name">{{ activity.name }}</div>
                     {% if activity.description %}
@@ -389,6 +389,16 @@
                     {% endif %}
                 </div>
                 {% endfor %}
+                {% if day_plan.accommodation %}
+                <div class="activity-item" style="background: #f0fdf4;">
+                    <div class="activity-name">🏨 {{ day_plan.accommodation }}</div>
+                    {% if day_plan.estimated_cost %}
+                    <div style="color: #059669; font-weight: 600; margin-top: 5px;">
+                        Est. ${{ day_plan.estimated_cost }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
@@ -409,10 +419,19 @@
             </h2>
 
             <div class="budget-table">
-                {% for item, amount in trip.budget_breakdown.items() %}
+                {% set budget_items = [
+                    ("Total Budget", trip.budget_breakdown.total_budget),
+                    ("Transportation", trip.budget_breakdown.transportation),
+                    ("Accommodation", trip.budget_breakdown.accommodation),
+                    ("Activities", trip.budget_breakdown.activities),
+                    ("Dining", trip.budget_breakdown.dining),
+                    ("Emergency Buffer", trip.budget_breakdown.emergency_buffer),
+                    ("Remaining", trip.budget_breakdown.remaining_buffer)
+                ] %}
+                {% for item, amount in budget_items %}
                 <div class="budget-row">
-                    <span>{{ item|replace("_", " ")|title }}</span>
-                    <span>${{ "%,.2f"|format(amount) }}</span>
+                    <span>{{ item }}</span>
+                    <span>${{ "%.2f"|format(amount) }}</span>
                 </div>
                 {% endfor %}
             </div>

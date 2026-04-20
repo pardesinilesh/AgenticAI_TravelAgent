@@ -15,7 +15,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from travel_agents.intelligent_orchestrator import TravelPlanningOrchestrator
+from travel_agents.intelligent_orchestrator import IntelligentTravelOrchestrator
 
 # Initialize FastAPI app
 app = FastAPI(title="Travel Planning Agent", description="AI-Powered Travel Planning")
@@ -34,7 +34,7 @@ except:
     pass
 
 # Initialize orchestrator
-orchestrator = TravelPlanningOrchestrator(use_google_api=False)
+orchestrator = IntelligentTravelOrchestrator(use_google_api=False)
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
@@ -92,15 +92,27 @@ async def plan_trip(
             )
         
         # Call orchestrator to plan trip
-        trip_plan = orchestrator.plan_trip(
-            destinations=destination_list,
-            start_date=start,
-            end_date=end,
-            budget=budget,
-            travel_style=travel_style,
-            interests=interest_list,
-            number_of_travelers=travelers
-        )
+        trip_plan = None
+        try:
+            trip_plan = orchestrator.plan_trip(
+                destinations=destination_list,
+                start_date=start,
+                end_date=end,
+                budget=budget,
+                travel_style=travel_style,
+                interests=interest_list,
+                number_of_travelers=travelers
+            )
+        except ValueError as ve:
+            import traceback
+            traceback.print_exc()
+            print(f"ValueError in plan_trip: {str(ve)}", flush=True)
+            raise
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"Exception in plan_trip: {str(e)}", flush=True)
+            raise
         
         # Format results for display
         return templates.TemplateResponse(
@@ -114,15 +126,23 @@ async def plan_trip(
         )
         
     except ValueError as ve:
+        import traceback
+        print(f"\n{'='*80}\nVALUEERROR RAISED IN plan_trip ROUTE:\n{'='*80}", flush=True)
+        traceback.print_exc(file=sys.stdout)
+        print(f"ValueError message: {str(ve)}\n{'='*80}\n", flush=True)
         return templates.TemplateResponse(
             "error.html",
             {"request": request, "error": f"Invalid input: {str(ve)}"},
             status_code=400
         )
     except Exception as e:
+        import traceback
+        traceback.print_exc()
+        error_msg = f"Error planning trip: {str(e)}"
+        print(f"DETAILED ERROR: {error_msg}")
         return templates.TemplateResponse(
             "error.html",
-            {"request": request, "error": f"Error planning trip: {str(e)}"},
+            {"request": request, "error": error_msg},
             status_code=500
         )
 
