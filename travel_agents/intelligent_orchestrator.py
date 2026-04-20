@@ -270,8 +270,11 @@ class IntelligentTravelOrchestrator:
         )
         
         # Learn from trip
+        # Use numeric total_budget for comparison to avoid string arithmetic errors
+        total_budget = trip_plan.get('budget_breakdown', {}).get('total_budget', float('inf'))
+        budget_respected = actual_spend is not None and actual_spend <= total_budget
         trip_characteristics = {
-            'budget_respected': actual_spend <= trip_plan.get('summary', {}).get('daily_budget', float('inf')) * 7,
+            'budget_respected': budget_respected,
             'style_matched': True,
             'interests_aligned': True
         }
