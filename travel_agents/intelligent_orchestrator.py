@@ -274,7 +274,7 @@ class IntelligentTravelOrchestrator:
         total_budget = trip_plan.get('budget_breakdown', {}).get('total_budget', float('inf'))
         budget_respected = actual_spend is not None and actual_spend <= total_budget
         trip_characteristics = {
-            'budget_respected': budget_respected,
+            'budget_respected': actual_spend <= trip_plan.get('budget_breakdown', {}).get('total_budget', float('inf')),
             'style_matched': True,
             'interests_aligned': True
         }
