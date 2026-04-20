@@ -55,13 +55,14 @@ class TravelCITestAgent(BaseAgent):
         google_api_key: Optional[str] = None,
         openai_api_key: Optional[str] = None,
     ) -> None:
-        """Initialise TravelCITestAgent.
+        """Initialize TravelCITestAgent.
 
         Args:
             use_google_api: Attempt real Google Maps API calls.
             use_llm: Attempt real OpenAI LLM calls.
             google_api_key: Override for GOOGLE_MAPS_API_KEY env var.
             openai_api_key: Override for OPENAI_API_KEY env var.
+        """
         """
         super().__init__("TravelCITestAgent")
         self.google_api_key = google_api_key or os.getenv("GOOGLE_MAPS_API_KEY")
