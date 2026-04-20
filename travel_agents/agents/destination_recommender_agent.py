@@ -176,6 +176,7 @@ class DestinationRecommenderAgent(BaseAgent):
     ) -> List[DestinationRecommendation]:
         """
         Get top destination recommendations.
+        Prioritizes user-requested destinations over algorithm-selected ones.
         
         Args:
             preferences: User travel preferences
@@ -185,6 +186,9 @@ class DestinationRecommenderAgent(BaseAgent):
             List of destination recommendations
         """
         recommendations = []
+        requested_destinations = [d.lower() for d in preferences.destinations]
+        requested_recs = []
+        algorithm_recs = []
         
         for destination in self.destinations:
             score = self.calculate_match_score(destination, preferences)
@@ -200,10 +204,19 @@ class DestinationRecommenderAgent(BaseAgent):
                 best_days_to_visit=max(2, min(7, travel_days)),
                 similar_destinations=self._find_similar_destinations(destination.name)
             )
-            recommendations.append(recommendation)
+            
+            # CHANGE: Prioritize user-requested destinations
+            if destination.name.lower() in requested_destinations:
+                requested_recs.append(recommendation)
+            else:
+                algorithm_recs.append(recommendation)
         
-        # Sort by match score
-        recommendations.sort(key=lambda x: x.match_score, reverse=True)
+        # Sort both lists by match score (descending)
+        requested_recs.sort(key=lambda x: x.match_score, reverse=True)
+        algorithm_recs.sort(key=lambda x: x.match_score, reverse=True)
+        
+        # Combine: Requested destinations first, then algorithm-based recommendations
+        recommendations = requested_recs + algorithm_recs
         
         return recommendations[:top_n]
 
