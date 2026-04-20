@@ -33,8 +33,8 @@ try:
 except:
     pass
 
-# Initialize orchestrator with live Google Maps data enabled
-orchestrator = IntelligentTravelOrchestrator(use_google_api=True)
+# Initialize orchestrator
+orchestrator = IntelligentTravelOrchestrator(use_google_api=False)
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
